@@ -1,0 +1,1026 @@
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: amazing-hoover-ebe005
+spec:
+    name: collectd/week
+    retentionRules:
+        - everySeconds: 691200
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: angry-shtern-abe009
+spec:
+    name: collectd/month
+    retentionRules:
+        - everySeconds: 2.7648e+06
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: cool-lalande-abe001
+spec:
+    name: collectd/autogen
+    retentionRules:
+        - everySeconds: 86400
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: inspiring-germain-ebe007
+spec:
+    name: collectd/year
+    retentionRules:
+        - everySeconds: 3.16224e+07
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: naughty-swartz-abe007
+spec:
+    name: collectd/hundyear
+    retentionRules:
+        - everySeconds: 3.1679424e+09
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: shiny-lichterman-abe003
+spec:
+    name: collectd/day
+    retentionRules:
+        - everySeconds: 90000
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: vibrant-proskuriakova-ebe003
+spec:
+    name: collectd/tenyear
+    retentionRules:
+        - everySeconds: 3.167424e+08
+          type: expire
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: adventuring-shirley-6be003
+spec:
+    every: 24h
+    name: 5. collectd_downsample_tenyear_fromyear
+    offset: 5m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/year"
+        toBucket = "collectd/tenyear"
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        counter_data =
+            all_data
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets" or r["type"]
+                            ==
+                            "dns_octets" or r["type"] == "dns_opcode" or r["type"] == "dns_qtype"
+                            or
+                            r["type"] == "dns_rcode",
+                )
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "mean")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "max")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "min")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "increase")
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "mean_rate")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "max_rate")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "min_rate")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: agitated-brown-2be001
+spec:
+    every: 1m
+    name: 1. collectd_downsample_day_fromautogen
+    offset: 1m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/autogen"
+        toBucket = "collectd/day"
+
+        collectdInterval = 30s
+
+        previousStopTime = date.sub(d: task.every, from: now())
+
+        previousStartTime = date.sub(d: collectdInterval, from: date.sub(d: task.every, from: now()))
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        previous_data =
+            from(bucket: fromBucket)
+                |> range(start: previousStartTime, stop: previousStopTime)
+                |> filter(fn: (r) => r._field == "value")
+                |> last()
+
+        counter_data =
+            union(tables: [previous_data, all_data])
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets" or r["type"]
+                            ==
+                            "dns_octets" or r["type"] == "dns_opcode" or r["type"] == "dns_qtype"
+                            or
+                            r["type"] == "dns_rcode",
+                )
+                |> window(every: inf)
+                |> sort(desc: false, columns: ["_time"])
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> difference(nonNegative: true, initialZero: true)
+            |> aggregateWindow(every: task.every, fn: sum)
+            //|> map(fn: (r) => ({r with _value: float(v: r._value)}))
+            |> set(key: "aggregate", value: "increase")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true, initialZero: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true, initialZero: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true, initialZero: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: agreeing-shamir-2be003
+spec:
+    every: 5m
+    name: collectd_downsample_week_autogen
+    offset: 1m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/autogen"
+        toBucket = "collectd/week"
+
+        collectdInterval = 30s
+
+        previousStopTime = date.sub(d: task.every, from: now())
+
+        previousStartTime = date.sub(d: collectdInterval, from: date.sub(d: task.every, from: now()))
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        previous_data =
+            from(bucket: fromBucket)
+                |> range(start: previousStartTime, stop: previousStopTime)
+                |> filter(fn: (r) => r._field == "value")
+                |> last()
+
+        //        |> map(fn: (r) => ({r with _time: previousStopTime}))
+        counter_data =
+            union(tables: [previous_data, all_data])
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets",
+                )
+                |> window(every: inf)
+                //        |> group(
+                //            columns: [
+                //                "host",
+                //                "instance",
+                //                "bucket",
+                //                "_measurement",
+                //                "type",
+                //                "_field",
+                //            ],
+                //            mode: "by",
+                //        )
+                |> sort(desc: false, columns: ["_time"])
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> difference(nonNegative: true, initialZero: true)
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> map(fn: (r) => ({r with _value: float(v: r._value)}))
+            |> set(key: "aggregate", value: "increase")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: amusing-ellis-ebe003
+spec:
+    every: 30m
+    name: 3. collectd_downsample_month_fromweek
+    offset: 3m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/week"
+        toBucket = "collectd/month"
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        counter_data =
+            all_data
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets" or r["type"]
+                            ==
+                            "dns_octets" or r["type"] == "dns_opcode" or r["type"] == "dns_qtype"
+                            or
+                            r["type"] == "dns_rcode",
+                )
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "mean")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "max")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "min")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "increase")
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "mean_rate")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "max_rate")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "min_rate")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: dangerous-meninsky-2be001
+spec:
+    every: 24h
+    name: collectd_downsample_tenyear_autogen
+    offset: 1m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/autogen"
+        toBucket = "collectd/tenyear"
+
+        collectdInterval = 30s
+
+        previousStopTime = date.sub(d: task.every, from: now())
+
+        previousStartTime = date.sub(d: collectdInterval, from: date.sub(d: task.every, from: now()))
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        previous_data =
+            from(bucket: fromBucket)
+                |> range(start: previousStartTime, stop: previousStopTime)
+                |> filter(fn: (r) => r._field == "value")
+                |> last()
+
+        //        |> map(fn: (r) => ({r with _time: previousStopTime}))
+        counter_data =
+            union(tables: [previous_data, all_data])
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets",
+                )
+                |> window(every: inf)
+                //        |> group(
+                //            columns: [
+                //                "host",
+                //                "instance",
+                //                "bucket",
+                //                "_measurement",
+                //                "type",
+                //                "_field",
+                //            ],
+                //            mode: "by",
+                //        )
+                |> sort(desc: false, columns: ["_time"])
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> difference(nonNegative: true, initialZero: true)
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> map(fn: (r) => ({r with _value: float(v: r._value)}))
+            |> set(key: "aggregate", value: "increase")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: nifty-williamson-abe001
+spec:
+    every: 6h
+    name: collectd_downsample_year_autogen
+    offset: 1m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/autogen"
+        toBucket = "collectd/year"
+
+        collectdInterval = 30s
+
+        previousStopTime = date.sub(d: task.every, from: now())
+
+        previousStartTime = date.sub(d: collectdInterval, from: date.sub(d: task.every, from: now()))
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        previous_data =
+            from(bucket: fromBucket)
+                |> range(start: previousStartTime, stop: previousStopTime)
+                |> filter(fn: (r) => r._field == "value")
+                |> last()
+
+        //        |> map(fn: (r) => ({r with _time: previousStopTime}))
+        counter_data =
+            union(tables: [previous_data, all_data])
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets",
+                )
+                |> window(every: inf)
+                //        |> group(
+                //            columns: [
+                //                "host",
+                //                "instance",
+                //                "bucket",
+                //                "_measurement",
+                //                "type",
+                //                "_field",
+                //            ],
+                //            mode: "by",
+                //        )
+                |> sort(desc: false, columns: ["_time"])
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> difference(nonNegative: true, initialZero: true)
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> map(fn: (r) => ({r with _value: float(v: r._value)}))
+            |> set(key: "aggregate", value: "increase")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: rainy-tu-ebe005
+spec:
+    every: 7d
+    name: collectd_downsample_hundyear_autogen
+    offset: 1m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/autogen"
+        toBucket = "collectd/hundyear"
+
+        collectdInterval = 30s
+
+        previousStopTime = date.sub(d: task.every, from: now())
+
+        previousStartTime = date.sub(d: collectdInterval, from: date.sub(d: task.every, from: now()))
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        //previous_data =
+        //    from(bucket: fromBucket)
+        //        |> range(start: previousStartTime, stop: previousStopTime)
+        //        |> filter(fn: (r) => r._field == "value")
+        //        |> last()
+        //        |> map(fn: (r) => ({r with _time: previousStopTime}))
+        counter_data =
+            all_data
+                // union(tables: [previous_data, all_data])
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets",
+                )
+
+        // |> window(every: inf)
+        //        |> group(
+        //            columns: [
+        //                "host",
+        //                "instance",
+        //                "bucket",
+        //                "_measurement",
+        //                "type",
+        //                "_field",
+        //            ],
+        //            mode: "by",
+        //        )
+        //|> sort(desc: false, columns: ["_time"])
+        all_data
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> difference(nonNegative: true, initialZero: true)
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> map(fn: (r) => ({r with _value: float(v: r._value)}))
+            |> set(key: "aggregate", value: "increase")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: sad-hawking-6be001
+spec:
+    every: 6h
+    name: 4. collectd_downsample_year_frommonth
+    offset: 4m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/month"
+        toBucket = "collectd/year"
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        counter_data =
+            all_data
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets" or r["type"]
+                            ==
+                            "dns_octets" or r["type"] == "dns_opcode" or r["type"] == "dns_qtype"
+                            or
+                            r["type"] == "dns_rcode",
+                )
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "mean")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "max")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "min")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "increase")
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "mean_rate")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "max_rate")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "min_rate")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: sad-turing-ebe001
+spec:
+    every: 7d
+    name: 6. collectd_downsample_hundyear_fromtenyear
+    offset: 6m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/tenyear"
+        toBucket = "collectd/hundyear"
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        counter_data =
+            all_data
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets" or r["type"]
+                            ==
+                            "dns_octets" or r["type"] == "dns_opcode" or r["type"] == "dns_qtype"
+                            or
+                            r["type"] == "dns_rcode",
+                )
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "mean")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "max")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "min")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "increase")
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "mean_rate")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "max_rate")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "min_rate")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: stubborn-mcclintock-abe003
+spec:
+    every: 30m
+    name: collectd_downsample_month_autogen
+    offset: 1m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/autogen"
+        toBucket = "collectd/month"
+
+        collectdInterval = 30s
+
+        previousStopTime = date.sub(d: task.every, from: now())
+
+        previousStartTime = date.sub(d: collectdInterval, from: date.sub(d: task.every, from: now()))
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        previous_data =
+            from(bucket: fromBucket)
+                |> range(start: previousStartTime, stop: previousStopTime)
+                |> filter(fn: (r) => r._field == "value")
+                |> last()
+
+        //        |> map(fn: (r) => ({r with _time: previousStopTime}))
+        counter_data =
+            union(tables: [previous_data, all_data])
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets",
+                )
+                |> window(every: inf)
+                //        |> group(
+                //            columns: [
+                //                "host",
+                //                "instance",
+                //                "bucket",
+                //                "_measurement",
+                //                "type",
+                //                "_field",
+                //            ],
+                //            mode: "by",
+                //        )
+                |> sort(desc: false, columns: ["_time"])
+
+        all_data
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> difference(nonNegative: true, initialZero: true)
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> map(fn: (r) => ({r with _value: float(v: r._value)}))
+            |> set(key: "aggregate", value: "increase")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> derivative(unit: 1s, nonNegative: true)
+            |> map(fn: (r) => ({r with _value: r._value * 8.0}))
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "mean_rate")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: stupefied-herschel-2be003
+spec:
+    every: 5m
+    name: 2. collectd_downsample_week_fromday
+    offset: 2m0s
+    query: |-
+        import "date"
+
+
+
+        fromBucket = "collectd/day"
+        toBucket = "collectd/week"
+
+        all_data =
+            from(bucket: fromBucket)
+                |> range(start: -task.every)
+                |> filter(fn: (r) => r._field == "value")
+
+        counter_data =
+            all_data
+                |> filter(
+                    fn: (r) =>
+                        r["type"] == "if_octets" or r["type"] == "ipt_bytes" or r["type"] == "if_packets"
+                            or
+                            r["type"] == "ipt_packets" or r["type"] == "disk_octets" or r["type"]
+                            ==
+                            "dns_octets" or r["type"] == "dns_opcode" or r["type"] == "dns_qtype"
+                            or
+                            r["type"] == "dns_rcode",
+                )
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "mean")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "max")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "aggregate", value: "max")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        all_data
+            |> filter(fn: (r) => r["aggregate"] == "min")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "aggregate", value: "min")
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "increase")
+            |> aggregateWindow(every: task.every, fn: sum)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "mean_rate")
+            |> aggregateWindow(every: task.every, fn: mean)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "max_rate")
+            |> aggregateWindow(every: task.every, fn: max)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
+
+        counter_data
+            |> filter(fn: (r) => r["aggregate"] == "min_rate")
+            |> aggregateWindow(every: task.every, fn: min)
+            |> set(key: "rollup_interval", value: string(v: task.every))
+            |> to(org: "my-org", bucket: toBucket)
