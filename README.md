@@ -26,7 +26,7 @@ Before you start you need to prepare and install following aplications on your s
    BUCKET=$(influx bucket list --hide-headers -n collectd/autogen | awk '{print $1}')
    influx auth create --org my-org --description 'collectd' --read-bucket $BUCKET --write-bucket $BUCKET
    ```
-   Copy the created Token ID, we will need it later for Telegraf config.
+   Copy the created Token ID (called by me below `InfluxDB-Token-For-Collectd-User`), we will need it later for Telegraf config.
 4. Create 'grafana' user with read access for the 'collectd/*' buckets
    ```
    BUCKET_AUTOGEN=$(influx bucket list --hide-headers -n collectd/autogen | awk '{print $1}')
@@ -38,7 +38,7 @@ Before you start you need to prepare and install following aplications on your s
    BUCKET_HUNDYEAR=$(influx bucket list --hide-headers -n collectd/hundyear | awk '{print $1}')
    influx auth create --org my-org --description 'grafana' --read-bucket $BUCKET_AUTOGEN --read-bucket $BUCKET_DAY --read-bucket $BUCKET_WEEK --read-bucket $BUCKET_MONTH --read-bucket $BUCKET_YEAR --read-bucket $BUCKET_TENYEAR  --read-bucket $BUCKET_HUNDYEAR
    ```
-   Copy the created Token ID, we will need it later for Grafana config.
+   Copy the created Token ID (called by me `Grafana-Token`), we will need it later for Grafana config.
 # Setup Telegraf
 1. Add stations counter to 'types.db' - Openwrt uses this type for counting WIFI connected stations
    ```
@@ -72,8 +72,39 @@ Before you start you need to prepare and install following aplications on your s
 
 # Set up Openwrt to send statistics to Telegraf/InfluxDB
 1. Login to Luci and go to `Statistics->Setup->Output plugins->Network->Configure`
+
    In the `Server Interface` section provide `Server Host` as `Telegraf-IP-address` and `Server Port` as `25827`
    ![obraz](https://github.com/user-attachments/assets/b8742665-3d44-4a5a-b0a1-c76210575745)
-   (In my expample `Telegraf-IP-address` is `192.168.100.99`)
+   
+   (In my example `Telegraf-IP-address` is `192.168.100.99`)
 
+# Setup Grafana
+1. Setup Flux Data Source
+   
+   Open you Grafana address in browser `(http://<Grafana-IP-address>:3000)`
 
+   Login to Grafana
+     
+   Navigate to `Home->Connections->DataSources->AddDataSource`
+
+   - Enter name for `Data Source` (e.g `collectd`)
+
+   - In section `Query language` 
+     Choose `Flux`
+
+   - In section `HTTP`
+     Provide URL for your InfluxDB with proper port `http://<InfluxdDB-IP-address>:8086`
+
+   - In section `Auth`
+     Uncheck Basic auth (nothing should be chosen)
+
+   - In section `InfluxDB details`
+     As `Organization` provide `my-org`
+     Provide `Grafana-Token` that we created above
+
+   - Click "Save&Test"
+
+   ![obraz](https://github.com/user-attachments/assets/25cef571-20a0-4bb9-9c07-2d6d7b96f0ff)
+
+2. Import Grafana Dashboard
+   
