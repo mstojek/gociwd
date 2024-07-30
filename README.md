@@ -70,13 +70,26 @@ Before you start you need to prepare and install following aplications on your s
    ```
    Note that we use port 25827 as port 25826 is used by Collectd. You need also to fill proper 'InfluxdDB-IP-address' and 'InfluxDB-Token-For-Collectd-User'
 
-# Set up Openwrt to send statistics to Telegraf/InfluxDB
+3. Restart Telegraf service
+   
+   `sudo service telegraf restart`
+
+# Set up Openwrt/Collectd to send statistics to Telegraf/InfluxDB
 1. Login to Luci and go to `Statistics->Setup->Output plugins->Network->Configure`
 
    In the `Server Interface` section provide `Server Host` as `Telegraf-IP-address` and `Server Port` as `25827`
    ![obraz](https://github.com/user-attachments/assets/b8742665-3d44-4a5a-b0a1-c76210575745)
    
    (In my example `Telegraf-IP-address` is `192.168.100.99`)
+
+2. If you prefer to edit config files instead of using Luci add following lines to your collectd conf file `/etc/collectd/collectd.conf`
+
+   ```
+   LoadPlugin network
+   <Plugin network> 
+   Server "<Telegraf-IP-address>" "25827"
+   </Plugin>
+   ```
 
 # Setup Grafana
 1. Setup Flux Data Source
@@ -107,4 +120,9 @@ Before you start you need to prepare and install following aplications on your s
    ![obraz](https://github.com/user-attachments/assets/25cef571-20a0-4bb9-9c07-2d6d7b96f0ff)
 
 2. Import Grafana Dashboard
+
+   - Copy Dashboard Template file [gociwd-grafana-template.json](https://raw.githubusercontent.com/mstojek/gociwd/main/gociwd-grafana-template.json) to your local hard disk
+
+   - Go to `Grafana->Home->Dashboards->Import dashboard` and Drag and Drop [gociwd-grafana-template.json](https://raw.githubusercontent.com/mstojek/gociwd/main/gociwd-grafana-template.json) file to the Import Field.
    
+
