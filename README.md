@@ -124,5 +124,10 @@ Before you start you need to prepare and install following aplications on your s
    - Copy Dashboard Template file [gociwd-grafana-template.json](https://raw.githubusercontent.com/mstojek/gociwd/main/gociwd-grafana-template.json) to your local hard disk
 
    - Go to `Grafana->Home->Dashboards->Import dashboard` and Drag and Drop [gociwd-grafana-template.json](https://raw.githubusercontent.com/mstojek/gociwd/main/gociwd-grafana-template.json) file to the Import Field.
+  
+   - Go to `Grafana->Home->Dashboards` and open new Dashboard `Openwrt Collectd Graph Panel (Flux)`
    
+# Example statistics
+
+![obraz](https://github.com/user-attachments/assets/adcd0978-8b81-495d-bffb-0da4da4d007b)
 
