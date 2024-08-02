@@ -200,7 +200,7 @@ In the Grafana charts you have an option named `Connect Null Values`. I prepared
   
   ![obraz](https://github.com/user-attachments/assets/b5d99358-9eed-40ce-b57e-480f55328035)
 
-  Note that between 9:10 and 13:30 nothing happend on the system, this chart should be "Null" or zero at this time. Instead Grafana connected last poing from ~9:10 whit first point at ~13:30
+  Note that between 9:10 and 13:30 nothing happened on the system, this chart should be "Null" or zero at this time. Instead Grafana connected last point from ~9:10 whit first point at ~13:30
 
   However the long term data have pretty nice look
   
