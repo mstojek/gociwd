@@ -129,5 +129,10 @@ Before you start you need to prepare and install following aplications on your s
    
 # Example statistics
 
-![obraz](https://github.com/user-attachments/assets/adcd0978-8b81-495d-bffb-0da4da4d007b)
+- Load, Memory and CPU statistics
+![obraz](https://github.com/user-attachments/assets/66e23c7c-7360-49a5-ac57-26fad7ffbbd4)
+
+
+
+
 
