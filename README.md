@@ -200,14 +200,15 @@ In the Grafana charts you have an option named `Connect Null Values`. I prepared
   
   ![obraz](https://github.com/user-attachments/assets/915bb5c0-6e33-45b3-b5a9-35297af747ed)
 
-  I do not have any solution for this issue.
+- I do not have any solution for this issue.
 
 # References
 
 1. Collectd Graph Panel - great tool to display collectd RRD files: [CGP](https://github.com/pommi/CGP)
-2. My solution is an evolution of following system decsribed at: [Collectd to InfluxDB v2 with downsampling using Tasks](https://cloud-infra.engineer/collectd-influxdb2-grafana-with-downsampling/)
+2. My solution is an evolution of following system described at: [Collectd to InfluxDB v2 with downsampling using Tasks](https://cloud-infra.engineer/collectd-influxdb2-grafana-with-downsampling/)
+
    What I added is
-   - rewriting everything to Flux (not good decision as Flux is depreciated now....)
+   - rewriting everything to Flux (not good decision as Flux is in [maintenance mode](https://docs.influxdata.com/flux/v0/future-of-flux/) now....)
    - better handling of data downsampling
 4. Small but important topic on how to properly calculate "total usage" counters: [Add previousN and nextN to range](https://github.com/influxdata/flux/issues/702)
 5. Very smart solution for dynamically choosing right bucket basing on timespan choosen in Grafana: http://wiki.webperfect.ch/index.php?title=Grafana:_Dynamic_Retentions_%28InfluxDB%29
