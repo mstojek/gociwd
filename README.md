@@ -132,6 +132,50 @@ Before you start you need to prepare and install following aplications on your s
 - Load, Memory and CPU statistics
 ![obraz](https://github.com/user-attachments/assets/66e23c7c-7360-49a5-ac57-26fad7ffbbd4)
 
+- Interfaces Traffic data
+![obraz](https://github.com/user-attachments/assets/0dc80779-77d0-4f5d-a54d-e9977711e165)
+![obraz](https://github.com/user-attachments/assets/4b1982bc-927e-46ca-b9bc-e91b7ab7f4bc)
+
+- Client Traffic data (Iptmon or Nlbwmon2collectd  required)
+![obraz](https://github.com/user-attachments/assets/9afd8715-339d-4aef-a46f-d0057d9f949c)
+![obraz](https://github.com/user-attachments/assets/5b7b3872-b1ae-494d-b826-a1b224ab5f78)
+
+- WIFI, Connections, DNS and DHCP leases statistics
+![obraz](https://github.com/user-attachments/assets/d1b21ac4-f36f-4eeb-a954-4ec2cf9332c6)
+
+- More statistics can be easily added by creating new Charts in Grafana. By default all statistics collected by Collectd are send to InfluxDB.
+ 
+# Data aggregation
+
+1. Data is aggeregated over time. Following aggregations are set:
+   - Daily - data resolution is 1 minute
+   - Weekly - data resolution is 5 minutes
+   - Monthly - data resolution is 30 minutes
+   - Yearly - data resolution is 6 hours
+   - 10 Year - data resolution is 1 day
+   - 100 Year - data resolution is 1 week
+2. Example charts:
+   - Hourly
+     ![obraz](https://github.com/user-attachments/assets/43b50a9a-11ae-4f9d-90b6-4dc1e1f6e5fa)
+   - Daily
+     ![obraz](https://github.com/user-attachments/assets/f123b22b-f4ff-46f1-b6a6-852176cd48bc)
+   - Monthly
+     ![obraz](https://github.com/user-attachments/assets/21df2b0e-cd9d-49e5-b1ba-362e56962167)
+   - 1 year ago in September
+     ![obraz](https://github.com/user-attachments/assets/4425430e-4987-4c8a-beb3-76d2c1807496)
+     
+# Chart parameters
+
+1. We have following chart parameters that can be choosen form drop-down menu
+   - `Hostname` - we can collects statistics from several collectd instances on several hosts (e.g. if you have more than one OpenWRT router, or some servers on Raspberrypi), here you can choose statistic form one collectd instance
+   - `Client` - if you have Iptmon or [Nlbwmon2Collectd](https://github.com/mstojek/nlbw2collectd) installed you can filter `Client Traffic` statistics just for this client
+   - `Interface` - you can filter `Interfaces Traffic` data per choosen interface
+   - `Wifi-Interface` - you can filter `Wifi` data per choosen Wifi interface
+   - `Aggregation Type` - 
+
+
+  
+  
 
 
 
