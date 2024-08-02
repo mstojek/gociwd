@@ -1,11 +1,16 @@
+**Grafana dashboard for Openwrt using Collectd and Influx (With Downsampling)**
+
 # Introduction
    
-In this instruction I will describe you how you can export your collectd statistics to InfluxDB and then display them in Grafana.
+In this instruction I will describe you how you can export your collectd statistics to InfluxDB and then display them in Grafana. This will allow you to get detailed statistics about your Openwrt (or any other system with collectd installed) performance. The graphs are almost realtime - the level of detail is 1 minute for last 24 hours. The statistics are downsampled what allows you to view information what was the system performance in the past (several month or years ago) while still keeping database size small. Of course level of details for statistics from one year ago is much lower (6 hours) that for the statistics for last 24 hours (1 minute). 
+The solution that I describe has been created basing on [Collectd to InfluxDB v2 with downsampling using Tasks](https://cloud-infra.engineer/collectd-influxdb2-grafana-with-downsampling/). 
+
+Side note - if you want to have simple and working solution use: [CGP](https://github.com/pommi/CGP). I am still using this and found it to be very versatile.
 
 # Prerequisities
-Before you start you need to prepare and install following aplications on your server hardware (I amd using Raspberrypi4 for this task):
+Before you start you need to prepare and install following aplications on your server hardware (I am using Raspberrypi4 for this task):
 
-    - Influx 2.0
+    - Influx 2.0 (probably it will work with version 1.8 also)
     - Influx 2.0 CLI
     - Telegraf
     - Grafana
