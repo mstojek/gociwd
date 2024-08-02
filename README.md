@@ -131,6 +131,8 @@ Before you start you need to prepare and install following aplications on your s
    - Go to `Grafana->Home->Dashboards->Import dashboard` and Drag and Drop [gociwd-grafana-template.json](https://raw.githubusercontent.com/mstojek/gociwd/main/gociwd-grafana-template.json) file to the Import Field.
   
    - Go to `Grafana->Home->Dashboards` and open new Dashboard `Openwrt Collectd Graph Panel (Flux)`
+  
+   - Alternatively you can use file [gociwd-grafana-template_AllwaysConnectNullValues.json](https://github.com/mstojek/gociwd/blob/main/gociwd-grafana-template_AllwaysConnectNullValues.json) see [Connect Null Values](https://github.com/mstojek/gociwd/blob/main/README.md#connect-null-values) for details
    
 # Example statistics
 
