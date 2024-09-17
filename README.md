@@ -1,3 +1,5 @@
+# Openwrt Collectd Graph Panel (Flux)
+
 [Instrukcja po polsku](README-pl.md)
 
 **Grafana dashboard for Openwrt using Collectd and Influx (With Downsampling)**
